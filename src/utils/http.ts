@@ -2,10 +2,8 @@ import axios, { AxiosError, type AxiosInstance } from 'axios'
 import HttpStatusCode from 'src/constants/httpStatusCode.enum'
 import { toast } from 'react-toastify'
 import { AuthResponse } from 'src/types/auth.type'
-
 import { clearLS, getAccessTokenFromLS, setAccessTokenToLS, setProfileToLS } from './auth'
 import path from 'src/constants/path'
-
 class Http {
   instance: AxiosInstance
   private accessToken: string
@@ -34,7 +32,6 @@ class Http {
     this.instance.interceptors.response.use(
       (response) => {
         const { url } = response.config
-
         if (url === path.login || url === path.register) {
           const data = response.data as AuthResponse
           this.accessToken = data.data.access_token
@@ -42,7 +39,6 @@ class Http {
           setProfileToLS(data.data.user)
         } else if (url === path.logout) {
           this.accessToken = ''
-
           clearLS()
         }
         return response
@@ -53,6 +49,10 @@ class Http {
           const data: any | undefined = error.response?.data
           const message = data.message || error.message
           toast.error(message)
+        }
+        if (error.response?.status === HttpStatusCode.Unauthorized) {
+          clearLS()
+          // window.location.reload()
         }
         return Promise.reject(error)
       }
